@@ -9,7 +9,8 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.douban.com/*"
+                "*://*.douban.com",
+                "*://*.douban.com/\\?p=4"
             ],
             "js": [
                 "status-link.js"
