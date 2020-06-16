@@ -1,5 +1,5 @@
 {
-    "manifest_version": 1,
+    "manifest_version": 2,
     "name": "DoubanFilter",
     "version": "0.1",
     "description": "给豆瓣增加打开状态和截图的快捷链接",

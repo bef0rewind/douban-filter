@@ -48,12 +48,35 @@ function screenshotPage(selectedPos, captureType) {
         }
     }
     return dataUrl;
-};
+}
+
+function screenshotAnchor(statusWrapperElem) {
+    imageAnchor = document.createElement('a');
+    imageAnchor.innerText = "📷";
+    imageAnchor.statusWrapperElem = statusWrapperElem;
+
+    imageAnchor.onclick = function () {
+        pos = statusWrapperElem.getBoundingClientRect();
+        pos = {
+            top: pos.top + window.scrollY,
+            left: pos.left + window.scrollX,
+            bottom: pos.bottom + window.scrollY,
+            right: pos.right + window.scrollX,
+        };
+        dataURL = screenshotPage(pos, null);
+        info = {
+            url: dataURL,
+            filename: new Date().getTime().toString() + '.jpeg'
+        };
+
+        const port = browser.runtime.connect();
+        port.postMessage(info);
+        port.disconnect();
+    };
+    return imageAnchor;
+}
 
 function replaceText(node) {
-    // screenshotPage(node.getBoundingClientRect(), null);
-
-    // var capturing = browser.tabs.captureVisibleTab();
     console.log("启动插件")
     hdElems = node.getElementsByClassName('hd')
     for (let i = 0; i < hdElems.length; i++) {
@@ -76,27 +99,12 @@ function replaceText(node) {
                     }
 
                     // create status image clipper
-                    imageAnchor = document.createElement('a');
-                    imageAnchor.innerText = "📷";
-                    imageAnchor.statusWrapperElem = hdElem.parentElement.parentElement;                    
-                    imageAnchor.onclick = function () {
-                        pos = this.statusWrapperElem.getBoundingClientRect();
-                        pos = {
-                            top: pos.top + window.scrollY,
-                            left: pos.left + window.scrollX,
-                            bottom: pos.bottom + window.scrollY,
-                            right: pos.right + window.scrollX,
-                        };
-                        dataURL = screenshotPage(pos, null);
-                        info = {
-                            url: dataURL,
-                            filename: new Date().getTime().toString() + '.jpeg'
-                        };
+                    statusWrapperElem = hdElem.parentElement.parentElement;
+                    if (statusWrapperElem.parentElement.classList.contains("new-status")) {
+                        statusWrapperElem = statusWrapperElem.parentElement;
+                    }
 
-                        const port = browser.runtime.connect();
-                        port.postMessage(info);
-                        port.disconnect();
-                    };
+                    imageAnchor = screenshotAnchor(statusWrapperElem);
 
                     if (referenceNode.tagName == 'BLOCKQUOTE') {
                         title.insertBefore(statusAnchor, referenceNode)
