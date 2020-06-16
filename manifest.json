@@ -1,16 +1,25 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 1,
     "name": "DoubanFilter",
-    "version": "1.0",
-    "description": "Adds a red border to all webpages matching mozilla.org.",
+    "version": "0.1",
+    "description": "给豆瓣增加打开状态和截图的快捷链接",
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+        "downloads",
+        "<all_urls>"
+    ],
     "icons": {
-        "48": "icons/border-48.png"
+        "48": "icons/icon48.png"
     },
     "content_scripts": [
         {
             "matches": [
                 "*://*.douban.com/",
-                "*://*.douban.com/\\?p*"
+                "*://*.douban.com/?p*"
             ],
             "js": [
                 "status-link.js"

@@ -1,23 +1,69 @@
-/**
- * Substitutes emojis into text nodes.
- * If the node contains more than just text (ex: it has child nodes),
- * call replaceText() on each of its children.
- *
- * @param  {Node} node    - The target DOM Node.
- * @return {void}         - Note: the emoji substitution is done inline.
- */
-function replaceText(node) {
+function captureToCanvas(selectedPos, captureType) {
+    const MAX_CANVAS_DIMENSION = 32767;
+    let height = selectedPos.bottom - selectedPos.top;
+    let width = selectedPos.right - selectedPos.left;
+    const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    const ctx = canvas.getContext("2d");
 
+    // Scale the canvas for high-density displays, except for full-page shots.
+    let expand = window.devicePixelRatio !== 1;
+    if (captureType === "fullPage" || captureType === "fullPageTruncated") {
+        expand = false;
+        canvas.width = width;
+        canvas.height = height;
+    } else {
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+    }
+    if (expand) {
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    // Double-check canvas width and height are within the canvas pixel limit.
+    // If the canvas dimensions are too great, crop the canvas and also crop
+    // the selection by a devicePixelRatio-scaled amount.
+    if (canvas.width > MAX_CANVAS_DIMENSION) {
+        canvas.width = MAX_CANVAS_DIMENSION;
+        width = expand ? Math.floor(canvas.width / window.devicePixelRatio) : canvas.width;
+    }
+    if (canvas.height > MAX_CANVAS_DIMENSION) {
+        canvas.height = MAX_CANVAS_DIMENSION;
+        height = expand ? Math.floor(canvas.height / window.devicePixelRatio) : canvas.height;
+    }
+
+    ctx.drawWindow(window, selectedPos.left, selectedPos.top, width, height, "#fff");
+    return canvas;
+}
+
+function screenshotPage(selectedPos, captureType) {
+    const canvas = captureToCanvas(selectedPos, captureType);
+    const pngToJpegCutoff = 2500000;
+    const limit = pngToJpegCutoff;
+    let dataUrl = canvas.toDataURL();
+    if (limit && dataUrl.length > limit) {
+        const jpegDataUrl = canvas.toDataURL("image/jpeg");
+        if (jpegDataUrl.length < dataUrl.length) {
+            // Only use the JPEG if it is actually smaller
+            dataUrl = jpegDataUrl;
+        }
+    }
+    return dataUrl;
+};
+
+function replaceText(node) {
+    // screenshotPage(node.getBoundingClientRect(), null);
+
+    // var capturing = browser.tabs.captureVisibleTab();
     console.log("启动插件")
     hdElems = node.getElementsByClassName('hd')
     for (let i = 0; i < hdElems.length; i++) {
         hdElem = hdElems[i]
         statusURL = hdElem.attributes.getNamedItem("data-status-url")
         if (statusURL) {
-            console.log(statusURL.value)
             statusAnchor = document.createElement('a');
             statusAnchor.href = statusURL.value;
-            statusAnchor.innerText = "🔗🔗";
+            statusAnchor.target = '_blank';
+            statusAnchor.innerText = "🔗";
 
             if (hdElem.children.length >= 2) {
                 if (hdElem.children[1].className == 'text') {
@@ -29,10 +75,35 @@ function replaceText(node) {
                             break;
                     }
 
+                    // create status image clipper
+                    imageAnchor = document.createElement('a');
+                    imageAnchor.innerText = "📷";
+                    imageAnchor.statusWrapperElem = hdElem.parentElement.parentElement;                    
+                    imageAnchor.onclick = function () {
+                        pos = this.statusWrapperElem.getBoundingClientRect();
+                        pos = {
+                            top: pos.top + window.scrollY,
+                            left: pos.left + window.scrollX,
+                            bottom: pos.bottom + window.scrollY,
+                            right: pos.right + window.scrollX,
+                        };
+                        dataURL = screenshotPage(pos, null);
+                        info = {
+                            url: dataURL,
+                            filename: new Date().getTime().toString() + '.jpeg'
+                        };
+
+                        const port = browser.runtime.connect();
+                        port.postMessage(info);
+                        port.disconnect();
+                    };
+
                     if (referenceNode.tagName == 'BLOCKQUOTE') {
-                        hdElem.children[1].insertBefore(statusAnchor, referenceNode)
+                        title.insertBefore(statusAnchor, referenceNode)
+                        title.insertBefore(imageAnchor, referenceNode)
                     } else {
-                        hdElem.children[1].appendChild(statusAnchor, referenceNode)
+                        title.appendChild(statusAnchor, referenceNode)
+                        title.appendChild(imageAnchor, referenceNode)
                     }
                 }
             }
