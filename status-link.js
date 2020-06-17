@@ -7,7 +7,8 @@ function captureToCanvas(selectedPos, captureType) {
 
     // Scale the canvas for high-density displays, except for full-page shots.
     let expand = window.devicePixelRatio !== 1;
-    if (captureType === "fullPage" || captureType === "fullPageTruncated") {
+    if (captureType === "fullPage" || captureType === "fullPageTruncated"
+        || height > 15000) { // TODO: this magic number is added for ctx.scale crash for long articles.
         expand = false;
         canvas.width = width;
         canvas.height = height;
@@ -128,9 +129,12 @@ function annotateArticle(node) {
     content.insertBefore(imageAnchor, content.children[0]);
 }
 
-if (document.URL.startsWith("https://www.douban.com/?p=") || document.URL == "https://www.douban.com") {
+if (document.URL.startsWith("https://www.douban.com/?p=")
+    || document.URL == "https://www.douban.com/") {
     annotateStatus(document.body);
-} else if (document.URL.startsWith("https://www.douban.com/people")) {
+} else if (document.URL.startsWith("https://www.douban.com/people/")
+    || document.URL.startsWith("https://www.douban.com/note/")
+    || document.URL.startsWith("https://www.douban.com/group/")) {
     annotateArticle(document.body);
 }
 
@@ -143,9 +147,12 @@ const observer = new MutationObserver((mutations) => {
             // algorithm on each newly added node.
             for (let i = 0; i < mutation.addedNodes.length; i++) {
                 const newNode = mutation.addedNodes[i];
-                if (document.URL.startsWith("https://www.douban.com/?p=") || document.URL == "https://www.douban.com") {
+                if (document.URL.startsWith("https://www.douban.com/?p=")
+                    || document.URL == "https://www.douban.com/") {
                     annotateStatus(newNode);
-                } else if (document.URL.startsWith("https://www.douban.com/people/")) {
+                } else if (document.URL.startsWith("https://www.douban.com/people/")
+                    || document.URL.startsWith("https://www.douban.com/note/")
+                    || document.URL.startsWith("https://www.douban.com/group/")) {
                     annotateArticle(newNode);
                 }
             }
