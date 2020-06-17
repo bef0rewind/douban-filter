@@ -76,7 +76,7 @@ function screenshotAnchor(statusWrapperElem) {
     return imageAnchor;
 }
 
-function replaceText(node) {
+function annotateStatus(node) {
     console.log("启动插件")
     hdElems = node.getElementsByClassName('hd')
     for (let i = 0; i < hdElems.length; i++) {
@@ -119,8 +119,20 @@ function replaceText(node) {
     }
 }
 
-// Start the recursion from the body tag.
-replaceText(document.body);
+function annotateArticle(node) {
+    console.log("启动插件")
+    article = node.getElementsByClassName('article')[0];
+    content = article.parentElement.parentElement;
+    imageAnchor = screenshotAnchor(article);
+    imageAnchor.style.fontSize = '26px';
+    content.insertBefore(imageAnchor, content.children[0]);
+}
+
+if (document.URL.startsWith("https://www.douban.com/?p=") || document.URL == "https://www.douban.com") {
+    annotateStatus(document.body);
+} else if (document.URL.startsWith("https://www.douban.com/people")) {
+    annotateArticle(document.body);
+}
 
 // Now monitor the DOM for additions and substitute emoji into new nodes.
 // @see https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver.
@@ -131,7 +143,11 @@ const observer = new MutationObserver((mutations) => {
             // algorithm on each newly added node.
             for (let i = 0; i < mutation.addedNodes.length; i++) {
                 const newNode = mutation.addedNodes[i];
-                replaceText(newNode);
+                if (document.URL.startsWith("https://www.douban.com/?p=") || document.URL == "https://www.douban.com") {
+                    annotateStatus(newNode);
+                } else if (document.URL.startsWith("https://www.douban.com/people/")) {
+                    annotateArticle(newNode);
+                }
             }
         }
     });

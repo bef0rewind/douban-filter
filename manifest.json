@@ -1,6 +1,6 @@
 {
     "manifest_version": 2,
-    "name": "DoubanFilter",
+    "name": "DoubanEnhance",
     "version": "0.1",
     "description": "给豆瓣增加打开状态和截图的快捷链接",
     "background": {
@@ -18,8 +18,7 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.douban.com/",
-                "*://*.douban.com/?p*"
+                "*://*.douban.com/*"
             ],
             "js": [
                 "status-link.js"
