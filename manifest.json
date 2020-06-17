@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
-    "name": "DoubanEnhance",
-    "version": "0.1",
+    "name": "DoubanShelter",
+    "version": "0.2",
     "description": "给豆瓣增加打开状态和截图的快捷链接",
     "background": {
         "scripts": [
